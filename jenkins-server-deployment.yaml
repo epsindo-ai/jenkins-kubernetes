@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-server
+  namespace: devops-tools
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins-server
+  template:
+    metadata:
+      labels:
+        app: jenkins-server
+    spec:
+      containers:
+        - name: jenkins-blueocean
+          image: ghcr.io/epsindo-ai/jenkins:2.452.3-jdk17-docker
+          securityContext:
+            privileged: true
+          ports:
+            - name: httpport
+              containerPort: 8080
+            - name: jnlport
+              containerPort: 50000
+          env:
+          - name: DOCKER_HOST
+            value: "tcp://jenkins-docker-service.devops-tools.svc.cluster.local:2376"
+          - name: DOCKER_CERT_PATH
+            value: "/certs/client"
+          - name: DOCKER_TLS_VERIFY
+            value: "1"
+          volumeMounts:
+          - name: jenkins-docker-certs
+            mountPath: /certs/client
+            readOnly: true
+          - name: jenkins-data
+            mountPath: /var/jenkins_home
+      volumes:
+      - name: jenkins-docker-certs
+        persistentVolumeClaim:
+          claimName: jenkins-docker-certs-pvc
+      - name: jenkins-data
+        persistentVolumeClaim:
+          claimName: jenkins-data-pvc
+      restartPolicy: Always

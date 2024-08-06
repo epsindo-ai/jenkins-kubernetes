@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-docker-service
+  namespace: devops-tools
+spec:
+  selector: 
+    app: jenkins-docker
+  type: NodePort  
+  ports:
+    - port: 2376
+      targetPort: 2376
+      nodePort: 32376

@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-docker
+  namespace: devops-tools
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins-docker
+  template:
+    metadata:
+      labels:
+        app: jenkins-docker
+    spec:
+      containers:
+        - name: docker
+          image: ghcr.io/epsindo-ai/docker:jenkins-dind-kubernetes
+          securityContext:
+            privileged: true
+          ports:
+            - name: dockerport
+              containerPort: 2376
+          env:
+          - name: DOCKER_TLS_CERTDIR
+            value: "/certs"
+          volumeMounts:
+          - name: jenkins-docker-certs
+            mountPath: /certs/client
+          - name: jenkins-data
+            mountPath: /var/jenkins_home
+      volumes:
+      - name: jenkins-docker-certs
+        persistentVolumeClaim:
+          claimName: jenkins-docker-certs-pvc
+      - name: jenkins-data
+        persistentVolumeClaim:
+          claimName: jenkins-data-pvc
+      restartPolicy: Always
